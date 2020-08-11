@@ -1,11 +1,11 @@
 package com.lambdaschool.crudyrestaurants.models;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
+
+import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * The entity allowing interaction with the restaurants table.
@@ -53,6 +53,49 @@ public class Restaurant
      * This was added to specifically show how to update fields that do not have a NULL value.
      */
     private int seatcapacity;
+
+
+//    Here we are connecting restaurant to menu, remember with restaurant there is a one to many
+//    relationship between menu to restaurant, there is one restaurant to many menu items
+//    we have to tell it how it is connected to Menu. because we have a collection we use the
+//    mappedBy, and have it equal a field inside of menu, same field in the OneToMany in Menu,
+//    they have to match and be exactly the same. When we do something with restaurant, update or
+//    delete, or retrieve, we want it to affect the menu items, if we delete a restaurant we want
+//    it to delete all the menu items, so whatever we do to restaurant we want it to happen to
+//    menu items, we use the cascade = cascadeType.all method. orphanRemoval will take a menu and
+//    if the menu/menuItem does not have a restaurant to match up with it will be removed. now
+//    restaurant is connected to menus.
+    @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
+//    we are going to have a Array List of menuitems, this time we have a collection of menu
+//    because  there are many items to one restaurant, now because it is a collection we are not
+//    going to use a constructor to bring it in. there are better ways to do so.
+    private List<Menu> menus = new ArrayList<>();
+// next we will be making the payments model. it has an Id and a type. (menus is now complete btw)
+// ***once payment is somewhat set up we come back here.***
+//    it is a many to many relationship and we need to make a join table
+//    the way many to many relationships get modeled in our database notice that we hace two
+//    tables, restaurants, payments, there is a join table that list both the restaurant id and
+//    the payment id, and we are going to join them together in there own table.
+//    we will have to create this join table, and tell it what we want in the join table and this
+//    will all be done in the main class that is why you decide the main class at the beginning.
+    @ManyToMany
+//    manyto many relationship, create JoinTable and give it a name. we need to make a list of the
+//    primary keys in the main table, to do that we make a table of JoinTables. we do Join
+//    Columng for the first primary Key and   inverse of  the second primary key from payment.
+//    they all have to match from their parent class. that is why we make them lowercase.
+     @JoinTable(name = "restaurantpayments",
+    joinColumns = @JoinColumn(name = "resturantid"),
+     inverseJoinColumns = @JoinColumn(name = "paymentid"))
+//    now there is going to be a collection of payments that goes into restaurant, instead of
+//    using list we are using set because sets forces uniqueness instead of List.
+//   with sets you do a set instead of list, the element type and then HashSet similar to
+//   arrayList. we have now connected restaurant to payment. lets go the other way payment to
+//   restaurant.
+    private  Set<Payment> payments = new HashSet<>();
+//    *** after completeing payment class, we do this...***
+//    now because we made some new private fields... menus and payments, we have to give them
+//    getters and setters, since they are collections we don't add them to the constructors.
+//    Bottom of page.
 
     /**
      * Default constructor used primarily by the JPA.
@@ -229,4 +272,29 @@ public class Restaurant
     {
         this.seatcapacity = seatcapacity;
     }
+
+//    adding getters and setters for menus and payments after payment class is completed. these
+//    are the two collections we added to Restaurant
+
+
+    public List<Menu> getMenus() {
+        return menus;
+    }
+
+    public void setMenus(List<Menu> menus) {
+        this.menus = menus;
+    }
+
+    public Set<Payment> getPayments() {
+        return payments;
+    }
+
+    public void setPayments(Set<Payment> payments) {
+        this.payments = payments;
+    }
+//    now we have created the three models we needed, we are going to connect them all together
+//    with repositories, we have already made a repo for Restaurant, we need one for menus, and
+//    payments, now we don't need a repo for RestaurantPayments eventhough its a table in our
+//    database, spring is going to be handeling in the background for us.
+//    create a MenuRepo in repositories, it will be an interface.
 }
